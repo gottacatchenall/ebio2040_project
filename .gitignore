@@ -3,6 +3,3 @@
 *.pyc
 *.mp4
 *.dSYM/
-data/
-mpfmdata/
-./mpfm
