@@ -4,7 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob, os, csv, sys
 
-dir_path = 'csvs/geo1/'
 np.set_printoptions(threshold=np.nan)
 
 SIZE_CUTOFF = 5
@@ -16,9 +15,10 @@ class Patch:
         self.patch = None
 
 def get_data(rel_path):
+    os.chdir("/Users/michael/Desktop/ecology_project")
     abs_path = os.path.abspath(dir_path)
     os.chdir(abs_path)
-    getdim = np.genfromtxt("2001.csv", delimiter=',')
+    getdim = np.genfromtxt("1.csv", delimiter=',')
     dim1 = len(getdim)
     dim2 = len(getdim[0])
 
@@ -27,9 +27,9 @@ def get_data(rel_path):
     for i,file in enumerate(os.listdir(abs_path)):
         if file.endswith(".csv"):
             with open(file, 'rU') as p:
-                year = file[0:4]
+                #year = file[0:4]
                 m = np.genfromtxt(p, delimiter=',')
-            maps.append( {'map': m, 'yr': int(year)})
+            maps.append( {'map': m, 'yr': int(i)})
 
     maps.sort(key=lambda x: x['yr'])
     return maps
@@ -52,11 +52,16 @@ def show_patch_map(patch_map, yr):
     #plt.show()
 
 def write_patch_map(patch_map, yr):
+    try:
+        os.mkdir("patch_csvs")
+    except:
+        pass
+
     im = np.zeros((len(patch_map), len(patch_map[0])))
     for i in range(len(patch_map)):
         for j in range(len(patch_map[0])):
             im[i][j] = patch_map[i][j].patch
-    np.savetxt("geo5_patch_maps/" + yr + ".csv", im, fmt='%d', delimiter=",")
+    np.savetxt("patch_csvs/" + yr + ".csv", im, fmt='%d', delimiter=",")
 
 ct = 0
 def find_patches(map, yr):
@@ -126,14 +131,15 @@ def find_patches(map, yr):
     for i in range(len(patch_lattice)):
         for j in range(len(patch_lattice[0])):
             if patch_lattice[i][j].patch > n_patches:
-                print 'fuck'
-    #write_patch_map(patch_lattice, yr)
-    show_patch_map(patch_lattice, yr)
+                print 'darn'
+    write_patch_map(patch_lattice, yr)
+    #show_patch_map(patch_lattice, yr)
 
+for i in range(0,50):
+    dir_path = 'models/csvs/markov' + str(i) + '/'
+    maps = get_data(dir_path)
 
-maps = get_data(dir_path)
-
-for i,map in enumerate(maps):
-    find_patches(map['map'], str(map['yr']))
+    for i,map in enumerate(maps):
+        find_patches(map['map'], str(map['yr']))
 
 #find_patches(maps[5]['map'], '2006')

@@ -5,12 +5,17 @@ import matplotlib.pyplot as plt
 import glob, os, csv, sys
 from scipy.spatial import distance
 
+file_names = [str(x) + '.csv' for x in range(2001,2014)]
+dirs = ['geo' + str(i) for i in range(1,6)]
 
 def read_csv(dir_path, file):
     path = dir_path + file
     abs_path = os.path.abspath(path)
-    mat = np.genfromtxt(abs_path, delimiter=',')
-    return mat
+    try:
+        mat = np.genfromtxt(abs_path, delimiter=',')
+        return mat
+    except:
+        return None
 
 def sort_into_patches(matrix):
     n_patches = int(np.amax(matrix))
@@ -77,8 +82,7 @@ def get_per_frag(matrix):
                 ct += 1
     return float(ct)/float(total_area)
 
-file_names = [str(x) + '.csv' for x in range(2001,2014)]
-dirs = ['geo' + str(i) for i in range(1,6)]
+
 
 def show_cli():
     for dir in dirs:
@@ -98,10 +102,80 @@ def show_cli():
 
         plt.scatter(x,y, label=dir)
 
+    model_dir_path = "models/csvs/" + model_folder + "/patch_csvs/"
+    model_file_names = [str(i) + ".csv" for i in range(0, 1000)]
+
+    x = []
+    y = []
+
+    for i,file in enumerate(model_file_names):
+        matrix = read_csv(model_dir_path, file)
+        if matrix is not None:
+            per_frag = get_per_frag(matrix)
+            patches = sort_into_patches(matrix)
+            cli = calc_cli(patches)
+
+            x.append(per_frag)
+            y.append(cli)
+    plt.scatter(x,y, label="model")
     plt.legend()
     plt.show()
 
-def show_division():
+def calc_cohesion(matrix, patches):
+    def on_map(i,j):
+        x = len(matrix)
+        y = len(matrix[0])
+        if i >= x or i < 0 or j >= y or j < 0:
+            return False
+        return True
+
+    def on_perim(x,y):
+        if on_map(x+1, y) and matrix[x+1,y] != matrix[x,y]:
+            return True
+        if on_map(x-1, y) and matrix[x-1,y] != matrix[x,y]:
+            return True
+        if on_map(x, y+1) and matrix[x,y+1] != matrix[x,y]:
+            return True
+        if on_map(x, y-1) and matrix[x,y-1] != matrix[x,y]:
+            return True
+        return False
+    def count_perim(patch):
+        p = 0
+        for x,y in patch:
+            if on_perim(x,y):
+                p += 1
+        return p
+
+    A = len(matrix) * len(matrix[0])
+
+    sum_p_ij = 0.0
+    sum_p_ij_times_root_aij = 0.0
+    for i,patch in enumerate(patches):
+        if len(patch) > 0:
+            a_ij = len(patch)
+            p_ij = count_perim(patch)
+
+            sum_p_ij += p_ij
+            sum_p_ij_times_root_aij += p_ij * np.sqrt(a_ij)
+    return (1.0-(sum_p_ij/sum_p_ij_times_root_aij))/(1.0-(1.0/np.sqrt(A)))
+
+
+
+
+def show_cohesion():
+
+    model_dirs = ["data/markov" + str(n) + "/" for n in range(0,50)]
+
+    model_x = []
+    model_y = []
+    for dir in model_dirs:
+        with open(dir + "cohesion.csv", "rb") as f:
+            reader = csv.reader(f, delimiter=",")
+            for line in reader:
+                model_x.append(float(line[0]))
+                model_y.append(float(line[1]))
+    plt.scatter(model_x, model_y)
+
     for dir in dirs:
         dir_path = 'data/' + dir +'/patch_map_csvs/'
         x = []
@@ -111,17 +185,101 @@ def show_division():
             matrix = read_csv(dir_path, file)
             per_frag = get_per_frag(matrix)
             patches = sort_into_patches(matrix)
+            cohension_index = calc_cohesion(matrix, patches)
+
+            x.append(per_frag)
+            y.append(cohension_index)
+
+
+        plt.scatter(x,y, label=dir)
+
+    '''
+    model_dir_path = "models/csvs/markov" + str(markov_n) + "/patch_csvs/"
+    model_file_names = [str(i) + ".csv" for i in range(0, 100)]
+
+
+    x = []
+    y = []
+
+    for i,file in enumerate(model_file_names):
+        matrix = read_csv(model_dir_path, file)
+        if matrix is not None:
+            per_frag = get_per_frag(matrix)
+            patches = sort_into_patches(matrix)
+            cohension_index = calc_cohesion(matrix, patches)
+
+            x.append(per_frag)
+            y.append(cohension_index)
+
+            with open("data/markov" + str(markov_n) + "/cohesion.csv" , 'a') as csvfile:
+                 writer = csv.writer(csvfile)
+                 writer.writerow([per_frag,cohension_index])
+    '''
+    #plt.scatter(x,y, label="model")
+    plt.legend()
+    plt.show()
+
+
+def show_division():
+    model_dirs = ["data/markov" + str(n) + "/" for n in range(0,50)]
+
+    model_x = []
+    model_y = []
+    for dir in model_dirs:
+        with open(dir + "division.csv", "rb") as f:
+            reader = csv.reader(f, delimiter=",")
+            for line in reader:
+                model_x.append(float(line[0]))
+                model_y.append(float(line[1]))
+    plt.scatter(model_x, model_y)
+
+    for dir in dirs:
+        dir_path = 'data/' + dir +'/patch_map_csvs/'
+        x = []
+        y = []
+
+        for i,file in enumerate(file_names):
+            matrix = read_csv(dir_path, file)
+            if matrix is not None:
+                per_frag = get_per_frag(matrix)
+                patches = sort_into_patches(matrix)
+                div = calc_division(matrix, patches)
+
+                x.append(per_frag)
+                y.append(div)
+
+
+
+        plt.scatter(x,y, label=dir)
+
+
+    '''
+    model_dir_path = "models/csvs/markov" + str(markov_n) + "/patch_csvs/"
+    model_file_names = [str(i) + ".csv" for i in range(0, 100)]
+
+    x = []
+    y = []
+
+    for i,file in enumerate(model_file_names):
+        matrix = read_csv(model_dir_path, file)
+        if matrix is not None:
+            per_frag = get_per_frag(matrix)
+            patches = sort_into_patches(matrix)
             div = calc_division(matrix, patches)
 
             x.append(per_frag)
             y.append(div)
 
-
-        plt.scatter(x,y, label=dir)
+            with open("data/markov" + str(markov_n) + "/division.csv" , 'a') as csvfile:
+                 writer = csv.writer(csvfile)
+                 writer.writerow([per_frag,div])
+    '''
+    #plt.scatter(x,y, label="model")
 
     plt.legend()
     plt.show()
 
+show_cohesion()
+show_division()
 
-#show_division()
-show_cli()
+#show_cli()
