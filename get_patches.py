@@ -8,7 +8,7 @@ np.set_printoptions(threshold=np.nan)
 
 SIZE_CUTOFF = 5
 
-class Patch:
+class Cell:
     def __init__(self, i, j):
         self.x = i
         self.y = j
@@ -34,7 +34,7 @@ def get_data(rel_path):
     maps.sort(key=lambda x: x['yr'])
     return maps
 
-def show_patch_map(patch_map, yr):
+def show_patch_map(patch_map):
     im = np.zeros((len(patch_map), len(patch_map[0])))
     for i in range(len(patch_map)):
         for j in range(len(patch_map[0])):
@@ -47,11 +47,11 @@ def show_patch_map(patch_map, yr):
 
     plt.imshow(im, cmap=cmap)
     plt.colorbar()
-    plt.savefig('pngs/' + yr+'.png', bbox_inches='tight')
-    plt.clf()
-    #plt.show()
+    #plt.savefig('pngs/' + yr+'.png', bbox_inches='tight')
+    #plt.clf()
+    plt.show()
 
-def write_patch_map(patch_map, yr):
+def write_patch_map(patch_map):
     try:
         os.mkdir("patch_csvs")
     except:
@@ -61,10 +61,10 @@ def write_patch_map(patch_map, yr):
     for i in range(len(patch_map)):
         for j in range(len(patch_map[0])):
             im[i][j] = patch_map[i][j].patch
-    np.savetxt("patch_csvs/" + yr + ".csv", im, fmt='%d', delimiter=",")
+    #np.savetxt("patch_csvs/" + yr + ".csv", im, fmt='%d', delimiter=",")
 
 ct = 0
-def find_patches(map, yr):
+def find_patches(map):
     def on_map(i,j):
         x = len(map)
         y = len(map[0])
@@ -72,7 +72,7 @@ def find_patches(map, yr):
             return False
         return True
 
-    patch_lattice = [[Patch(i,j) for j in range(0, len(map[0]))] for i in range(0,len(map))]
+    patch_lattice = [[Cell(i,j) for j in range(0, len(map[0]))] for i in range(0,len(map))]
     patch_val = 1
     for i in range(len(patch_lattice)):
         for j in range(len(patch_lattice[0])):
@@ -132,14 +132,16 @@ def find_patches(map, yr):
         for j in range(len(patch_lattice[0])):
             if patch_lattice[i][j].patch > n_patches:
                 print 'darn'
-    write_patch_map(patch_lattice, yr)
-    #show_patch_map(patch_lattice, yr)
+    #show_patch_map(patch_lattice)
 
+    return patch_lattice
+
+'''
 for i in range(0,50):
     dir_path = 'models/csvs/markov' + str(i) + '/'
     maps = get_data(dir_path)
 
     for i,map in enumerate(maps):
         find_patches(map['map'], str(map['yr']))
-
+'''
 #find_patches(maps[5]['map'], '2006')

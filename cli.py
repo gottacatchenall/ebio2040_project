@@ -67,9 +67,10 @@ def calc_division(matrix, patches):
     total_area = len(matrix) * len(matrix[0])
 
     s = 0
-    for i,patch in enumerate(patches):
-        if len(patch) > 0:
-            s += (float(len(patch))/float(total_area))**2
+    for patch in patches:
+        cell_list = patch.cells
+        if len(cell_list) > 0:
+            s += (float(len(cell_list))/float(total_area))**2
     return (1.0 - s)*100
 
 def get_per_frag(matrix):
@@ -148,12 +149,15 @@ def calc_cohesion(matrix, patches):
 
     A = len(matrix) * len(matrix[0])
 
+
     sum_p_ij = 0.0
     sum_p_ij_times_root_aij = 0.0
-    for i,patch in enumerate(patches):
-        if len(patch) > 0:
-            a_ij = len(patch)
-            p_ij = count_perim(patch)
+
+    for patch in patches:
+        cell_list = patch.cells
+        if len(cell_list) > 0:
+            a_ij = len(cell_list)
+            p_ij = count_perim(cell_list)
 
             sum_p_ij += p_ij
             sum_p_ij_times_root_aij += p_ij * np.sqrt(a_ij)
@@ -279,7 +283,7 @@ def show_division():
     plt.legend()
     plt.show()
 
-show_cohesion()
-show_division()
+#show_cohesion()
+#show_division()
 
 #show_cli()
